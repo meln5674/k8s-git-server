@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "k8s-git-server.fullname" . }}
+  labels:
+    {{- include "k8s-git-server.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "k8s-git-server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+        k8s-git-server.meln5674.github.com/config-hash: {{ include "k8s-git-server.config" | adler32sum }}
+      {{- end }}
+      labels:
+        {{- include "k8s-git-server.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "k8s-git-server.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+          - name: EXTERNAL_HOSTS
+            value: {{ include "k8s-git-server.externalHosts" . | trimPrefix "\n" | replace "\n" "," }}
+            {{- $configDir := "/etc/k8s-git-server/users/" }}
+          - name: CONFIG_DIR
+            value: {{ $configDir }}
+          - name: SECRET_PREFIX
+            value: {{ .Values.ssh.secrets.namePrefix }}
+          - name: SECRET_SUFFIX
+            value: {{ .Values.ssh.secrets.nameSuffix }}
+          - name: PRIVATE_KEY_KEY
+            value: {{ .Values.ssh.secrets.privateKeyKey }}
+          - name: PUBLIC_KEY_KEY
+            value: {{ .Values.ssh.secrets.publicKeyKey }}
+          - name: KNOWN_HOSTS_KEY
+            value: {{ .Values.ssh.secrets.knownHostsKey }}
+            {{- $readyFile := "/var/run/k8s-git-server-ready" }}
+          - name: READY_FILE
+            value: {{ $readyFile }}
+          ports:
+            - name: ssh
+              containerPort: 22
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: ssh
+          readinessProbe:
+            exec:
+              command:
+              - stat
+              - {{ $readyFile }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+          {{- range $user := .Values.git.users }}
+          {{- range $repo := $user.repos }}
+          - name: git
+            mountPath: /{{ $repo | trimPrefix "/" }}
+            subPath: {{ $repo | trimPrefix "/" }}
+          {{- end }}
+          {{- end }}
+          - name: cfg
+            mountPath: {{ $configDir }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: cfg
+        configMap:
+          name: {{ include "k8s-git-server.fullname" . }}
+      - name: git
+        {{- if .Values.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ include "k8s-git-server.pvcName" . }}
+        {{- else }}
+        emptyDir: {}
+        {{- end }}
+
