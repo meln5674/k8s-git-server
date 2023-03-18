@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  k8s-git-server:
+  - apiVersion: v2
+    appVersion: sha-eb5ae138a57824825c0fea34e86ba5402968c7df
+    created: "2023-03-18T03:37:56.906395621Z"
+    description: SSH server for testing Git-based applications
+    digest: 6a855abb6fda466868aaa00ee40f758cd048247b12a632a52048a4a80d73fd5b
+    name: k8s-git-server
+    type: application
+    urls:
+    - https://github.com/meln5674/k8s-git-server/releases/download/k8s-git-server-0.1.0-eb5ae138a57824825c0fea34e86ba5402968c7df/k8s-git-server-0.1.0-eb5ae138a57824825c0fea34e86ba5402968c7df.tgz
+    version: 0.1.0-eb5ae138a57824825c0fea34e86ba5402968c7df
+generated: "2023-03-18T03:37:56.906410521Z"
