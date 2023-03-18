@@ -1,0 +1,17 @@
+{{- define "k8s-git-server.config" -}}
+{{- range $user := .Values.git.users }}
+  '{{ $user.name }}': |
+    {{- range $repo := $user.repos }}
+    {{ $repo }}
+    {{- end }}
+{{- end }}
+{{- end -}}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "k8s-git-server.fullname" . }}
+  labels:
+    {{ include "k8s-git-server.labels" . | nindent 4 }}
+data:
+{{- include "k8s-git-server.config" . | nindent 0 }}

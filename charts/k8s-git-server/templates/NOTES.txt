@@ -1,0 +1,39 @@
+{{- $dot := . }}
+To use your repo(s), mount one of your secrets:
+{{- range $user := .Values.git.users }}
+- {{ include "k8s-git-server.secretName" (list $dot $user.name) }}
+{{- end }}
+
+then run `git clone`.
+
+Example:
+
+{{- $firstUser := index .Values.git.users 0  }}
+{{- $firstUserName := $firstUser.name }}
+{{- $firstUserHome :=  print "/home/" $firstUserName }}
+{{- if eq $firstUserName "root" }}
+{{- $firstUserHome = "/root" }}
+{{- end }}
+{{- $firstRepo := index $firstUser.repos 0 }}
+{{- $firstHost := tpl (index .Values.ssh.externalHosts 0) . }}
+
+for example,
+
+containers:
+- name: git
+  volumeMounts:
+  - name: git
+    mountPath: {{ $firstUserHome }}/.ssh
+  env:
+  - name: GIT_SSH_COMMAND
+    value: "ssh -i '{{ $firstUserHome }}/.ssh/{{ .Values.ssh.secrets.privateKeyKey }}' -o 'UserKnownHostsFile={{ $firstUserHome }}/.ssh/{{ .Values.ssh.secrets.knownHostsKey }}'"
+  command:
+  - bash
+  - -xec
+  - |-
+    git clone ssh://{{ $firstUserName }}@{{ $firstHost }}{{ $firstRepo }}
+volumes:
+- name: git
+  secret:
+    secretName: {{ include "k8s-git-server.secretName" (list . $firstUserName ) }}
+    defaultMode: 0500
