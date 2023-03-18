@@ -1,0 +1,38 @@
+{{- $firstUser := index .Values.git.users 0 }}
+{{- $firstUserName := $firstUser.name }}
+{{- $firstUserHome :=  print "/home/" $firstUserName }}
+{{- if eq $firstUserName "root" }}
+{{- $firstUserHome = "/root" }}
+{{- end }}
+{{- $firstRepo := index $firstUser.repos 0 }}
+{{- $firstHost := tpl (index .Values.ssh.externalHosts 0) . }}
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "k8s-git-server.fullname" . }}-test-connection"
+  labels:
+    {{- include "k8s-git-server.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: git
+      image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+      volumeMounts:
+      - name: git
+        mountPath: {{ $firstUserHome }}/.ssh
+      env:
+      - name: GIT_SSH_COMMAND
+        value: "ssh -vvv -i '{{ $firstUserHome }}/.ssh/{{ .Values.ssh.secrets.privateKeyKey }}' -o 'UserKnownHostsFile={{ $firstUserHome }}/.ssh/{{ .Values.ssh.secrets.knownHostsKey }}'"
+      command:
+      - bash
+      - -xec
+      - |-
+        git clone ssh://{{ $firstUserName }}@{{ $firstHost }}{{ $firstRepo }}
+  volumes:
+  - name: git
+    secret:
+      secretName: {{ include "k8s-git-server.secretName" (list . $firstUserName ) }}
+      defaultMode: 0500
