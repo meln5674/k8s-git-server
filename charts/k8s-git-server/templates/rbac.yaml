@@ -1,0 +1,36 @@
+{{- if .Values.rbac.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "k8s-git-server.fullname" . }}
+  labels:
+    {{ include "k8s-git-server.labels" . | nindent 4 }}
+rules:
+- apiGroups: ['']
+  resources: [secrets]
+  verbs: [create]
+- apiGroups: ['']
+  resources: [secrets]
+  verbs: [get, patch]
+  resourceNames:
+  {{- $dot := . }}
+  {{- range $user := .Values.git.users }}
+  - {{ include "k8s-git-server.secretName" (list $dot $user.name ) }}
+  {{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "k8s-git-server.fullname" . }}
+  labels:
+    {{ include "k8s-git-server.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "k8s-git-server.fullname" . }}
+subjects:
+- apiGroup: ''
+  kind: ServiceAccount
+  namespace: {{ .Release.Namespace }}
+  name: {{ include "k8s-git-server.serviceAccountName" . }}
+{{- end }}
