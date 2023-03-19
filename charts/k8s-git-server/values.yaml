@@ -76,11 +76,22 @@ persistence:
   storageClassName: # None
   existingPersistentVolumeClaim:
     name: # None
+# Git repos and users to create
 git:
   users:
+    # Name of the user to create
   - name: root
+    # Repos to create for them
     repos:
-    - /git
+      # Absolute path in the git server FS to create the repo at
+    - path: /git
+      # Optional: Source of an existing directory to push on install/upgrade. History will not be preserved, if any, and dirty files will also be committed
+      # source:
+      #   volume:
+      #     persistentVolumeClaim:
+      #       name: my-existing-claim
+      #   volumeMount:
+      #     subPath: path/in/volume
 ssh:
   externalHosts:
   - '{{ include "k8s-git-server.fullname" . }}'
@@ -91,5 +102,8 @@ ssh:
     namePrefix: k8s-git-server
     nameSuffix: ''
     privateKeyKey: private_key
-    publicKeyKey: public_key
+    publicKeyKey: private_key.pub
     knownHostsKey: known_hosts
+
+tests:
+  script: ''

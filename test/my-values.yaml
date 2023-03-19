@@ -1,7 +1,0 @@
-git:
-  users:
-  - name: git
-    repos:
-    - /git
-persistence:
-  enabled: true

@@ -16,5 +16,6 @@ ARG KUBECTL_URL=${KUBECTL_MIRROR}/${KUBECTL_VERSION}/bin/${GOOS}/${GOARCH}/kubec
 RUN curl -L "${KUBECTL_URL}" > /usr/bin/kubectl && chmod +x /usr/bin/kubectl
 
 COPY docker-entrypoint.sh /docker-entrypoint.sh
+COPY push-repos.sh /push-repos.sh
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
