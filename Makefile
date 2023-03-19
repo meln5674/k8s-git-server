@@ -17,3 +17,6 @@ docker-build:
 .PHONY: kind-load
 kind-load: docker-build
 	kind load docker-image --name=$(KIND_CLUSTER) $(IMAGE)
+
+smoke-test-local: kind-load
+	./test/smoke-test.sh ./charts/k8s-git-server/
