@@ -1,0 +1,87 @@
+{{ $dot := . }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "k8s-git-server.fullname" . }}-push
+  labels:
+    {{- include "k8s-git-server.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+spec:
+  backoffLimit: 0 
+  template:
+    spec:
+      restartPolicy: Never
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "k8s-git-server.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: [/push-repos.sh]
+          env:
+          - name: EXTERNAL_HOST
+            value: {{ index (include "k8s-git-server.externalHosts" . | splitList "\n") 1 }}
+            {{- $repoDir := "/git" }}
+          - name: REPO_DIR
+            value: {{ $repoDir }}
+          - name: PRIVATE_KEY_KEY
+            value: {{ .Values.ssh.secrets.privateKeyKey }}
+          - name: PUBLIC_KEY_KEY
+            value: {{ .Values.ssh.secrets.publicKeyKey }}
+          - name: KNOWN_HOSTS_KEY
+            value: {{ .Values.ssh.secrets.knownHostsKey }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+          - name: tmp
+            mountPath: /tmp
+          {{- range $uix, $user := .Values.git.users }}
+          - name: ssh-{{ $uix }}
+            mountPath: {{ if eq $user.name "root" }}/root{{ else }}/home/{{ $user.name }}{{ end }}/.ssh
+          {{- range $rix, $repo := $user.repos }}
+          {{- with $repo.source }}
+          - name: git-{{ $uix }}-{{ $rix }}
+            mountPath: {{ $repoDir }}/{{ $user.name }}/{{ $repo.path | trimPrefix "/" | trimSuffix "/" }}/.k8s-git-server
+            {{- with .volumeMount }}
+            {{- with .subPath }}
+            subPath: {{ . | trimPrefix "/" }}
+            {{- end }}
+            {{- end }}
+          {{- end }}
+          {{- end }}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      {{- range $uix, $user := .Values.git.users }}
+      - name: ssh-{{ $uix }}
+        secret:
+          secretName: {{ include "k8s-git-server.secretName" (list $dot $user.name) }}
+          defaultMode: 0400
+      {{- range $rix, $repo := $user.repos }}
+      {{- with $repo.source }}
+      - name: git-{{ $uix }}-{{ $rix }}
+        {{- .volume | toYaml | nindent 8 }}
+      {{- end }}
+      {{- end }}
+      {{- end }}

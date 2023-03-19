@@ -1,0 +1,16 @@
+git:
+  users:
+  - name: git
+    repos:
+    - path: /from-configmap
+      source:
+        volume:
+          configMap:
+            name: test
+            defaultMode: 0700
+    - path: /git
+persistence:
+  enabled: true
+tests:
+  script:
+    from-configmap/test.sh
