@@ -115,7 +115,7 @@ ls "${CONFIG_DIR}" | while read -r user ; do
         if ! git -C "${repo}" status; then
             git -C "${repo}" init --bare
         fi
-        chown "${user}" "${repo}"
+        chown -R "${user}" "${repo}"
     done < "${CONFIG_DIR}/${user}"
 done
 

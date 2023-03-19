@@ -71,8 +71,8 @@ spec:
           {{- range $user := .Values.git.users }}
           {{- range $repo := $user.repos }}
           - name: git
-            mountPath: /{{ $repo | trimPrefix "/" }}
-            subPath: {{ $repo | trimPrefix "/" }}
+            mountPath: /{{ $repo.path | trimPrefix "/" }}
+            subPath: {{ $repo.path | trimPrefix "/" }}
           {{- end }}
           {{- end }}
           - name: cfg

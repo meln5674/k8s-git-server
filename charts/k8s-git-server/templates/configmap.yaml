@@ -2,7 +2,7 @@
 {{- range $user := .Values.git.users }}
   '{{ $user.name }}': |
     {{- range $repo := $user.repos }}
-    {{ $repo }}
+    {{ $repo.path }}
     {{- end }}
 {{- end }}
 {{- end -}}
