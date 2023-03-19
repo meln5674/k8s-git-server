@@ -30,7 +30,11 @@ spec:
       - bash
       - -xec
       - |-
-        git clone ssh://{{ $firstUserName }}@{{ $firstHost }}{{ $firstRepo }}
+        git clone ssh://{{ $firstUserName }}@{{ $firstHost }}/{{ $firstRepo.path | trimPrefix "/" }}
+
+        {{- with .Values.tests.script }}
+        {{ . | nindent 8 }}
+        {{- end }}
   volumes:
   - name: git
     secret:
