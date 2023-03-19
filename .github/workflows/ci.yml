@@ -133,17 +133,15 @@ jobs:
 
       - name: Smoke Test
         run: |
-          version=$(yq -r '.version' '${{ env.CHARTS_DIR }}/k8s-git-server/Chart.yaml')
+          version=$(yq eval '.version' '${{ env.CHARTS_DIR }}/k8s-git-server/Chart.yaml')
+
+          if [ -z "${version}" ]; then
+            echo "Unable to get chart version"
+            exit 1
+          fi
           
           helm repo add k8s-git-server https://meln5674.github.io/k8s-git-server/ --debug
 
-          for x in $(seq 10); do
-            helm repo update --debug
-            if helm upgrade --install k8s-git-server k8s-git-server/k8s-git-server --values test/my-values.yaml --version="${version}" --wait --debug ; then
-              break
-            fi
-            echo 'Waiting and retrying'
-            sleep 60
-          done
-          helm test k8s-git-server --debug
+          ./test/smoke-test.sh k8s-git-server/k8s-git-server "${version}"
+          
           helm delete k8s-git-server --debug

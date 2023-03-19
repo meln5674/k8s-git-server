@@ -31,7 +31,7 @@ containers:
   - bash
   - -xec
   - |-
-    git clone ssh://{{ $firstUserName }}@{{ $firstHost }}{{ $firstRepo }}
+    git clone ssh://{{ $firstUserName }}@{{ $firstHost }}/{{ $firstRepo.path | trimPrefix "/" }}
 volumes:
 - name: git
   secret:
