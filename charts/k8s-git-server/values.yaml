@@ -92,6 +92,7 @@ git:
       #       name: my-existing-claim
       #   volumeMount:
       #     subPath: path/in/volume
+      #   tarFlags: []
 ssh:
   externalHosts:
   - '{{ include "k8s-git-server.fullname" . }}'

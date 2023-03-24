@@ -8,6 +8,8 @@ git:
           configMap:
             name: test
             defaultMode: 0700
+        tarFlags:
+        - --exclude=to-skip
     - path: /git
 persistence:
   enabled: true

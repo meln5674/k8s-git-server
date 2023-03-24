@@ -25,7 +25,7 @@ spec:
         mountPath: {{ $firstUserHome }}/.ssh
       env:
       - name: GIT_SSH_COMMAND
-        value: "ssh -vvv -i '{{ $firstUserHome }}/.ssh/{{ .Values.ssh.secrets.privateKeyKey }}' -o 'UserKnownHostsFile={{ $firstUserHome }}/.ssh/{{ .Values.ssh.secrets.knownHostsKey }}'"
+        value: "ssh -v -i '{{ $firstUserHome }}/.ssh/{{ .Values.ssh.secrets.privateKeyKey }}' -o 'UserKnownHostsFile={{ $firstUserHome }}/.ssh/{{ .Values.ssh.secrets.knownHostsKey }}'"
       command:
       - bash
       - -xec

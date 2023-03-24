@@ -5,3 +5,9 @@ metadata:
 data:
   test.sh: |
     echo "This is a test"
+    if [ -f "to-skip" ]; then
+      echo "Excluded file wasn't skipped!"
+      ls -la
+    fi
+  to-skip: |
+    this file should be skipped

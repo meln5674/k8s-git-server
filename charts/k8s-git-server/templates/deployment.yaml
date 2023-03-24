@@ -16,7 +16,7 @@ spec:
       {{- with .Values.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
-        k8s-git-server.meln5674.github.com/config-hash: {{ include "k8s-git-server.config" | adler32sum }}
+        k8s-git-server.meln5674.github.com/config-hash: {{ print (include "k8s-git-server.usersConfig" .) (include "k8s-git-server.flagsConfig" .) | adler32sum }}
       {{- end }}
       labels:
         {{- include "k8s-git-server.selectorLabels" . | nindent 8 }}
@@ -92,7 +92,7 @@ spec:
       volumes:
       - name: cfg
         configMap:
-          name: {{ include "k8s-git-server.fullname" . }}
+          name: {{ include "k8s-git-server.fullname" . }}-users
       - name: git
         {{- if .Values.persistence.enabled }}
         persistentVolumeClaim:

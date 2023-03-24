@@ -55,6 +55,11 @@ spec:
             subPath: {{ . | trimPrefix "/" }}
             {{- end }}
             {{- end }}
+          {{- with .tarFlags }}
+          - name: flags
+            mountPath: {{ $repoDir }}/{{ $user.name }}/{{ $repo.path | trimPrefix "/" | trimSuffix "/" }}/.flags
+            subPath: {{ $uix }}-{{ $rix }}
+          {{- end }}
           {{- end }}
           {{- end }}
           {{- end }}
@@ -73,6 +78,9 @@ spec:
       volumes:
       - name: tmp
         emptyDir: {}
+      - name: flags
+        configMap:
+          name: {{ include "k8s-git-server.fullname" . }}-flags
       {{- range $uix, $user := .Values.git.users }}
       - name: ssh-{{ $uix }}
         secret:
