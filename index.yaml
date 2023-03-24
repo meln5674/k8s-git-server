@@ -12,6 +12,16 @@ entries:
     - https://github.com/meln5674/k8s-git-server/releases/download/k8s-git-server-v0.3.0/k8s-git-server-v0.3.0.tgz
     version: v0.3.0
   - apiVersion: v2
+    appVersion: sha-5be7c9fc20c059528473dcd8ee57c2290e2faf62
+    created: "2023-03-24T00:57:22.217837023Z"
+    description: SSH server for testing Git-based applications
+    digest: 5fc55b12619d25f906aaf2d869611cda3a5ca3db324b9fbd3989fccf6994a262
+    name: k8s-git-server
+    type: application
+    urls:
+    - https://github.com/meln5674/k8s-git-server/releases/download/k8s-git-server-0.3.0-5be7c9fc20c059528473dcd8ee57c2290e2faf62/k8s-git-server-0.3.0-5be7c9fc20c059528473dcd8ee57c2290e2faf62.tgz
+    version: 0.3.0-5be7c9fc20c059528473dcd8ee57c2290e2faf62
+  - apiVersion: v2
     appVersion: v0.2.0
     created: "2023-03-19T23:00:17.935889382Z"
     description: SSH server for testing Git-based applications
@@ -31,4 +41,4 @@ entries:
     urls:
     - https://github.com/meln5674/k8s-git-server/releases/download/k8s-git-server-v0.1.0/k8s-git-server-v0.1.0.tgz
     version: v0.1.0
-generated: "2023-03-24T00:57:06.943478778Z"
+generated: "2023-03-24T00:57:22.217859623Z"
