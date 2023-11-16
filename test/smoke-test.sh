@@ -3,6 +3,8 @@
 CHART=$1
 VERSION=${2:-}
 
+IMAGE_REPO=${IMAGE_REPO:-ghcr.io/meln5674/k8s-git-server}
+
 FLAGS=( k8s-git-server "${CHART}" --values test/values.yaml )
 if [ -n "${VERSION}" ]; then
     FLAGS+=( --version="${VERSION}" )
@@ -17,7 +19,7 @@ for x in $(seq 10); do
   sleep 60
 done
 
-FLAGS+=( --wait --debug --install )
+FLAGS+=( --wait --debug --install --set image.repository="${IMAGE_REPO}" --set image.tag="${VERSION}")
 
 kubectl apply -f test/configmap.yaml
 
