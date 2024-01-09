@@ -11,8 +11,11 @@ git:
         tarFlags:
         - --exclude=to-skip
     - path: /git
+    - path: /svn
+      type: svn
 persistence:
   enabled: true
 tests:
-  script:
-    from-configmap/test.sh
+  script: |
+    git/from-configmap/test.sh
+    svn info git/svn

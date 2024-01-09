@@ -3,23 +3,32 @@
 CHART=$1
 VERSION=${2:-}
 
+CHART_REPO=${CHART_REPO:-k8s-git-server}
 IMAGE_REPO=${IMAGE_REPO:-ghcr.io/meln5674/k8s-git-server}
 
-FLAGS=( k8s-git-server "${CHART}" --values test/values.yaml )
-if [ -n "${VERSION}" ]; then
+FLAGS=( "${CHART}" --values test/values.yaml --set image.repository="${IMAGE_REPO}" --set image.tag="${VERSION}" )
+
+if [ -z "${VERSION}" ]; then
+    helm lint "${FLAGS[@]}"
+else
     FLAGS+=( --version="${VERSION}" )
+
+    for x in $(seq 10); do
+      helm repo update --debug "${CHART_REPO}"
+      if helm template "${FLAGS[@]}" ; then
+          break
+      fi
+      echo 'Waiting and retrying'
+      sleep 60
+    done
 fi
 
-for x in $(seq 10); do
-  helm repo update --debug
-  if helm template "${FLAGS[@]}" ; then
-      break
-  fi
-  echo 'Waiting and retrying'
-  sleep 60
-done
 
-FLAGS+=( --wait --debug --install --set image.repository="${IMAGE_REPO}" --set image.tag="${VERSION}")
+
+FLAGS=( k8s-git-server  "${FLAGS[@]}" )
+helm template "${FLAGS[@]}" >/dev/null
+
+FLAGS+=( --wait --debug --install )
 
 kubectl apply -f test/configmap.yaml
 

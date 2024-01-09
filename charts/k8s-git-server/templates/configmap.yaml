@@ -1,9 +1,13 @@
 {{- define "k8s-git-server.usersConfig" -}}
 {{- range $user := .Values.git.users }}
-  '{{ $user.name }}': |
+{{- range $repoType := list "git" "svn" }}
+  '{{ $user.name }}.{{ $repoType }}': |
     {{- range $repo := $user.repos }}
+    {{- if eq $repoType ($repo.type | default "git") }}
     {{ $repo.path }}
     {{- end }}
+    {{- end }}
+{{- end }}
 {{- end }}
 {{- end -}}
 
@@ -12,7 +16,7 @@
 {{- range $rix, $repo := $user.repos }}
 {{- with $repo.source }}
 {{- with .tarFlags }}
-  '{{ $uix }}-{{ $rix }}': |
+  '{{ $uix }}-{{ $rix }}.{{ $repo.type | default "git" }}': |
     {{- range . }}
     {{- . | nindent 4 }}
     {{- end }}
