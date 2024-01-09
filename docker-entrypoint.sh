@@ -61,7 +61,7 @@ done
 
 sed -i "s|localhost|${EXTERNAL_HOSTS}|g" "${known_hosts}"
 
-ls "${CONFIG_DIR}" | while read -r user ; do
+ls "${CONFIG_DIR}" | sed -E 's/\.(git|svn)$//' | sort -u | while read -r user ; do
     (
         if ! id "${user}"; then
             adduser "${user}" -D
@@ -119,7 +119,16 @@ ls "${CONFIG_DIR}" | while read -r user ; do
                 fi
                 chown -R "${user}" "${repo}"
             ) < /dev/null
-        done < "${CONFIG_DIR}/${user}"
+        done < "${CONFIG_DIR}/${user}.git"
+        while read -r repo ; do
+            (
+                mkdir -p "$(dirname "${repo}")"
+                if ! svnadmin info "${repo}" ; then
+                    svnadmin create "${repo}"
+                fi
+                chown -R "${user}" "${repo}"
+            ) < /dev/null
+        done < "${CONFIG_DIR}/${user}.svn"
     ) < /dev/null
 done
 
