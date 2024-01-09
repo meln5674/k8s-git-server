@@ -1,10 +1,4 @@
-{{- $firstUser := index .Values.git.users 0 }}
-{{- $firstUserName := $firstUser.name }}
-{{- $firstUserHome :=  print "/home/" $firstUserName }}
-{{- if eq $firstUserName "root" }}
-{{- $firstUserHome = "/root" }}
-{{- end }}
-{{- $firstRepo := index $firstUser.repos 0 }}
+{{- $dot := . }}
 {{- $firstHost := tpl (index .Values.ssh.externalHosts 0) . }}
 
 apiVersion: v1
@@ -21,22 +15,50 @@ spec:
     - name: git
       image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
       volumeMounts:
-      - name: git
-        mountPath: {{ $firstUserHome }}/.ssh
-      env:
-      - name: GIT_SSH_COMMAND
-        value: "ssh -v -i '{{ $firstUserHome }}/.ssh/{{ .Values.ssh.secrets.privateKeyKey }}' -o 'UserKnownHostsFile={{ $firstUserHome }}/.ssh/{{ .Values.ssh.secrets.knownHostsKey }}'"
+      {{- range $user := .Values.git.users }}
+      - name: git-{{ $user.name }}
+        mountPath: /home/{{ $user.name }}/.ssh
+      {{- end }}
       command:
       - bash
       - -xec
       - |-
-        git clone ssh://{{ $firstUserName }}@{{ $firstHost }}/{{ $firstRepo.path | trimPrefix "/" }}
+        cat > ssh-with-creds.sh <<'EOF'
+        #!/bin/bash -xeu
+        ssh -v \
+          -i "/home/${test_user}/.ssh/{{ .Values.ssh.secrets.privateKeyKey }}" \
+          -o "UserKnownHostsFile=/home/${test_user}/.ssh/{{ .Values.ssh.secrets.knownHostsKey }}" \
+          $@
+        EOF
+        cat ssh-with-creds.sh
+        chmod +x ssh-with-creds.sh
+        export GIT_SSH_COMMAND="${PWD}/ssh-with-creds.sh"
+        export SVN_SSH="${GIT_SSH_COMMAND}"
+        {{- range $user := .Values.git.users }}
+        {{- range $repo := $user.repos }}
+        export test_user="{{ $user.name }}"
+        {{- $repoType := $repo.type | default "git" }}
+        mkdir -p '{{ $user.name }}/{{ $repo.path }}'
+        (
+          cd '{{ $user.name }}/{{ $repo.path }}'
+          {{- if eq $repoType "git" }}
+          git clone 'ssh://{{ $user.name }}@{{ $firstHost }}/{{ $repo.path | trimPrefix "/" }}' .
+          {{- else if eq $repoType "svn" }}
+          svn checkout 'svn+ssh://{{ $user.name }}@{{ $firstHost }}/{{ $repo.path | trimPrefix "/" }}' .
+          {{- else }}
+          {{- print "invalid repo type " $repoType " " $repo | fail }}
+          {{- end }}
+        )
+        {{- end }}
+        {{- end }}
 
         {{- with .Values.tests.script }}
         {{ . | nindent 8 }}
         {{- end }}
   volumes:
-  - name: git
+  {{- range $user := .Values.git.users }}
+  - name: git-{{ $user.name }}
     secret:
-      secretName: {{ include "k8s-git-server.secretName" (list . $firstUserName ) }}
+      secretName: {{ include "k8s-git-server.secretName" (list $dot $user.name ) }}
       defaultMode: 0500
+  {{- end }}

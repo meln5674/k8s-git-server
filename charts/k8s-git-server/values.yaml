@@ -85,6 +85,8 @@ git:
     repos:
       # Absolute path in the git server FS to create the repo at
     - path: /git
+      # Optional: Type of repo, must be "git" or "svn", defaults to "git"
+      # type: git
       # Optional: Source of an existing directory to push on install/upgrade. History will not be preserved, if any, and dirty files will also be committed
       # source:
       #   volume:

@@ -7,7 +7,7 @@ ARG GOARCH=amd64
 
 FROM ${PROXY_CACHE}${BASE_IMAGE_REPO}:${BASE_IMAGE_TAG}
 
-RUN apk add openssh bash curl git shadow
+RUN apk add openssh bash curl git shadow subversion
 ARG GOOS
 ARG GOARCH
 ARG KUBECTL_MIRROR=https://dl.k8s.io/release
