@@ -2,7 +2,8 @@ git:
   users:
   - name: git
     repos:
-    - path: /from-configmap
+    - path: /git
+    - path: /git-from-configmap
       source:
         volume:
           configMap:
@@ -10,12 +11,28 @@ git:
             defaultMode: 0700
         tarFlags:
         - --exclude=to-skip
-    - path: /git
+        - --exclude=..data
+        - --exclude=..2*
     - path: /svn
       type: svn
+    - path: /svn-from-configmap
+      type: svn
+      source:
+        volume:
+          configMap:
+            name: test
+            defaultMode: 0700
+        tarFlags:
+        - --exclude=to-skip
+        - --exclude=..data
+        - --exclude=..2*
 persistence:
   enabled: true
 tests:
   script: |
-    git/from-configmap/test.sh
-    svn info git/svn
+    git -C /git/git status
+    git -C /git/git-from-configmap status
+    /git/git-from-configmap/test.sh /git/git-from-configmap
+    svn info /git/svn
+    svn info /git/svn-from-configmap
+    /git/svn-from-configmap/test.sh /git/svn-from-configmap

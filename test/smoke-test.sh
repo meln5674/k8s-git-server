@@ -35,11 +35,13 @@ kubectl apply -f test/configmap.yaml
 kubectl delete job k8s-git-server-push || true
 ( while ! kubectl logs -f job/k8s-git-server-push ; do sleep 2; done ) &
 
-helm upgrade "${FLAGS[@]}"
-
-wait || true
-
-(while ! kubectl logs -f k8s-git-server-test-connection ; do sleep 2; done) &
-helm test k8s-git-server --debug
-
-wait || true
+for x in 1 2; do
+    helm upgrade "${FLAGS[@]}"
+    
+    wait || true
+    
+    (while ! kubectl logs -f k8s-git-server-test-connection ; do sleep 2; done) &
+    helm test k8s-git-server --debug
+    
+    wait || true
+done

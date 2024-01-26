@@ -4,10 +4,12 @@ metadata:
   name: test
 data:
   test.sh: |
+    #!/bin/bash -xeu
     echo "This is a test"
-    if [ -f "to-skip" ]; then
+    if [ -f "$1/to-skip" ]; then
       echo "Excluded file wasn't skipped!"
-      ls -la
+      ls -la "$1"
+      exit 1
     fi
   to-skip: |
     this file should be skipped

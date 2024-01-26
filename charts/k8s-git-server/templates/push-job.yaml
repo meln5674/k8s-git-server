@@ -58,8 +58,16 @@ spec:
           {{- with .tarFlags }}
           - name: flags
             mountPath: {{ $repoDir }}/{{ $user.name }}/{{ $repo.path | trimPrefix "/" | trimSuffix "/" }}/.flags
-            subPath: {{ $uix }}-{{ $rix }}
+            subPath: {{ $uix }}-{{ $rix }}.{{ $repo.type | default "git" }}
           {{- end }}
+          {{- end }}
+          {{- if eq ($repo.type | default "git") "git" }}
+          - name: empty
+            mountPath: {{ $repoDir }}/{{ $user.name }}/{{ $repo.path | trimPrefix "/" | trimSuffix "/" }}/.git
+          {{- end }}
+          {{- if eq ($repo.type | default "git") "svn" }}
+          - name: empty
+            mountPath: {{ $repoDir }}/{{ $user.name }}/{{ $repo.path | trimPrefix "/" | trimSuffix "/" }}/.svn
           {{- end }}
           {{- end }}
           {{- end }}
@@ -76,6 +84,8 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
+      - name: empty
+        emptyDir: {}
       - name: tmp
         emptyDir: {}
       - name: flags

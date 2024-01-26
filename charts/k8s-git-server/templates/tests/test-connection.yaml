@@ -50,7 +50,9 @@ spec:
           {{- end }}
         )
         {{- end }}
+        ls -laR '{{ $user.name }}'
         {{- end }}
+
 
         {{- with .Values.tests.script }}
         {{ . | nindent 8 }}
