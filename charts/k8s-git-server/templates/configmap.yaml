@@ -1,10 +1,10 @@
 {{- define "k8s-git-server.usersConfig" -}}
 {{- range $user := .Values.git.users }}
 {{- range $repoType := list "git" "svn" }}
-  '{{ $user.name }}.{{ $repoType }}': |
-    {{- range $repo := $user.repos }}
-    {{- if eq $repoType ($repo.type | default "git") }}
-    {{ $repo.path }}
+'{{ $user.name }}.{{ $repoType }}': |
+  {{- range $repo := $user.repos }}
+  {{- if eq $repoType ($repo.type | default "git") }}
+  {{ $repo.path }}
     {{- end }}
     {{- end }}
 {{- end }}
@@ -16,15 +16,36 @@
 {{- range $rix, $repo := $user.repos }}
 {{- with $repo.source }}
 {{- with .tarFlags }}
-  '{{ $uix }}-{{ $rix }}.{{ $repo.type | default "git" }}': |
-    {{- range . }}
-    {{- . | nindent 4 }}
-    {{- end }}
+'{{ $uix }}-{{ $rix }}.{{ $repo.type | default "git" }}': |
+  {{- range . }}
+  {{- . | nindent 4 }}
+  {{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
 {{- end -}}
+
+{{- define "k8s-git-server.scripts" -}}
+{{- with .Values.extraSetup.pre }}
+pre.sh: |
+  {{- . | nindent 2 }}
+{{- end }}
+{{- with .Values.extraSetup.post }}
+post.sh: |
+  {{- . | nindent 2 }}
+{{- end }}
+{{- end -}}
+
+{{- define "k8s-git-server.configHash" -}}
+{{- $dot := . }}
+{{- $configs := list "usersConfig" "flagsConfig" "scripts" }}
+{{- $toHash := "" }}
+{{- range $config := $configs }}
+{{- $toHash := print $toHash (include (print "k8s-git-server." $config) $dot) }}
+{{- end }}
+{{- adler32sum $toHash }}
+{{- end }}
 
 ---
 apiVersion: v1
@@ -34,7 +55,7 @@ metadata:
   labels:
     {{ include "k8s-git-server.labels" . | nindent 4 }}
 data:
-{{- include "k8s-git-server.usersConfig" . | nindent 0 }}
+{{- include "k8s-git-server.usersConfig" . | nindent 2 }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -43,5 +64,14 @@ metadata:
   labels:
     {{ include "k8s-git-server.labels" . | nindent 4 }}
 data:
-{{- include "k8s-git-server.flagsConfig" . | nindent 0 }}
+{{- include "k8s-git-server.flagsConfig" . | nindent 2 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "k8s-git-server.fullname" . }}-scripts
+  labels:
+    {{ include "k8s-git-server.labels" . | nindent 4 }}
+data:
+{{- include "k8s-git-server.scripts" . | nindent 2 }}
 ---

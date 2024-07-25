@@ -108,5 +108,10 @@ ssh:
     publicKeyKey: private_key.pub
     knownHostsKey: known_hosts
 
+# Optional extra script contents to execute before and after initializing the repositories on pod startup
+extraSetup:
+  pre: ''
+  post: ''
+
 tests:
   script: ''

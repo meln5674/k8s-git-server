@@ -3,6 +3,7 @@
 *NOT FOR PRODUCTION USE*
 
 This repo contains a container image and helm chart for deploying a ssh-based git server into Kubernetes for testing git-based tools such as CI/CD tools, GitOps, etc.
+Despite the name, Subversion (SVN) repositories are also supported.
 
 ## Deploying
 
@@ -74,6 +75,23 @@ git:
     repos:
     - path: /path/to/repo
 ```
+
+## Extra Setup
+
+To execute extra setup on each pod start, set the following
+
+```yaml
+# my-values.yaml
+extraSetup:
+  pre: |
+    #!/bin/bash
+    # This script will run before ssh and git are initialized
+  post: |
+    #!/bin/bash
+    # This script will run after ssh and git are initialized, just before the server is started
+```
+
+
 ## Connecting
 
 This chart is only intended to be connected from within the same cluster. Secrets will be created containing SSH key pairs and a known_hosts file to use.

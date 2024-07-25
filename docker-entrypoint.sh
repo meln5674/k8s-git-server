@@ -42,6 +42,10 @@ function secret_patch {
     indent_file "    " "${known_hosts}"
 }
 
+if [ -n "${PRE_SETUP_SCRIPT:-}" ] ; then
+    "${PRE_SETUP_SCRIPT}"
+fi
+
 ssh-keygen -A
 
 "$(which sshd)" -D -e &
@@ -131,6 +135,10 @@ ls "${CONFIG_DIR}" | sed -E 's/\.(git|svn)$//' | sort -u | while read -r user ; 
         done < "${CONFIG_DIR}/${user}.svn"
     ) < /dev/null
 done
+
+if [ -n "${POST_SETUP_SCRIPT:-}" ] ; then
+    "${POST_SETUP_SCRIPT}"
+fi
 
 touch "${READY_FILE}"
 

@@ -28,6 +28,15 @@ git:
         - --exclude=..2*
 persistence:
   enabled: true
+
+extraSetup:
+  pre: |
+    #!/bin/bash -xeu
+    echo 'This should execute before the setup'
+  post: |
+    #!/bin/bash -xeu
+    echo 'This should execute after the setup'
+
 tests:
   script: |
     git -C /git/git status

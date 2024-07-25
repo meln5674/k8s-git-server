@@ -13,11 +13,11 @@ spec:
       {{- include "k8s-git-server.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        k8s-git-server.meln5674.github.com/config-hash: '{{ include "k8s-git-server.configHash" . }}'
+        {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-        k8s-git-server.meln5674.github.com/config-hash: {{ print (include "k8s-git-server.usersConfig" .) (include "k8s-git-server.flagsConfig" .) | adler32sum }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "k8s-git-server.selectorLabels" . | nindent 8 }}
     spec:
@@ -37,7 +37,8 @@ spec:
           env:
           - name: EXTERNAL_HOSTS
             value: {{ include "k8s-git-server.externalHosts" . | trimPrefix "\n" | replace "\n" "," }}
-            {{- $configDir := "/etc/k8s-git-server/users/" }}
+            {{- $configDir := "/etc/k8s-git-server/users" }}
+            {{- $scriptsDir := "/etc/k8s-git-server/scripts" }}
           - name: CONFIG_DIR
             value: {{ $configDir }}
           - name: SECRET_PREFIX
@@ -53,6 +54,14 @@ spec:
             {{- $readyFile := "/var/run/k8s-git-server-ready" }}
           - name: READY_FILE
             value: {{ $readyFile }}
+          {{- with .Values.extraSetup.pre }}
+          - name: PRE_SETUP_SCRIPT
+            value: {{ $scriptsDir }}/pre.sh
+          {{- end }}
+          {{- with .Values.extraSetup.post }}
+          - name: POST_SETUP_SCRIPT
+            value: {{ $scriptsDir }}/post.sh
+          {{- end }}
           ports:
             - name: ssh
               containerPort: 22
@@ -77,6 +86,8 @@ spec:
           {{- end }}
           - name: cfg
             mountPath: {{ $configDir }}
+          - name: scripts
+            mountPath: {{ $scriptsDir }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -93,6 +104,10 @@ spec:
       - name: cfg
         configMap:
           name: {{ include "k8s-git-server.fullname" . }}-users
+      - name: scripts
+        configMap:
+          name: {{ include "k8s-git-server.fullname" . }}-scripts
+          defaultMode: 0500
       - name: git
         {{- if .Values.persistence.enabled }}
         persistentVolumeClaim:
