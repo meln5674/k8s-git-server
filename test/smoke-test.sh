@@ -2,11 +2,12 @@
 
 CHART=$1
 VERSION=${2:-}
+IMAGE_TAG=${3:-${VERSION}}"
 
 CHART_REPO=${CHART_REPO:-k8s-git-server}
 IMAGE_REPO=${IMAGE_REPO:-ghcr.io/meln5674/k8s-git-server}
 
-FLAGS=( "${CHART}" --values test/values.yaml --set image.repository="${IMAGE_REPO}" --set image.tag="${VERSION}" )
+FLAGS=( "${CHART}" --values test/values.yaml --set image.repository="${IMAGE_REPO}" --set image.tag="${IMAGE_TAG}" )
 
 if [ -z "${VERSION}" ]; then
     helm lint "${FLAGS[@]}"
