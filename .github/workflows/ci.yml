@@ -142,6 +142,10 @@ jobs:
           
           helm repo add k8s-git-server https://meln5674.github.io/k8s-git-server/ --debug
 
-          ./test/smoke-test.sh k8s-git-server/k8s-git-server "${version}"
+          if [ -n "${{ steps.tagName.outputs.tag }}" ]; then
+            ./test/smoke-test.sh k8s-git-server/k8s-git-server "${version}"
+          else
+            ./test/smoke-test.sh k8s-git-server/k8s-git-server "${version}" "sha-${GITHUB_SHA}"
+          fi
           
           helm delete k8s-git-server --debug
