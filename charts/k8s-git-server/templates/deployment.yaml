@@ -62,6 +62,9 @@ spec:
           - name: POST_SETUP_SCRIPT
             value: {{ $scriptsDir }}/post.sh
           {{- end }}
+          {{- with .Values.extraEnv }}
+          {{- . | toYaml | nindent 10 }}
+          {{- end }}
           ports:
             - name: ssh
               containerPort: 22
@@ -88,6 +91,9 @@ spec:
             mountPath: {{ $configDir }}
           - name: scripts
             mountPath: {{ $scriptsDir }}
+          {{- with .Values.extraVolumeMounts }}
+          {{- . | toYaml | nindent 10 }}
+          {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -115,4 +121,6 @@ spec:
         {{- else }}
         emptyDir: {}
         {{- end }}
-
+      {{- with .Values.extraVolumeMounts }}
+      {{- . | toYaml | nindent 6 }}
+      {{- end }}

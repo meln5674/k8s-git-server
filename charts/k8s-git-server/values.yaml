@@ -55,6 +55,10 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
+extraEnv: []
+extraVolumes: []
+extraVolumeMounts: []
+
 autoscaling:
   enabled: false
   minReplicas: 1

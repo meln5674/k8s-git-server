@@ -29,13 +29,25 @@ git:
 persistence:
   enabled: true
 
+extraEnv:
+- name: FOO
+  value: bar
+extraVolumes:
+- name: test
+  emptyDir: {}
+extraVolumeMounts:
+- mountPath: /test
+  name: test
+
 extraSetup:
   pre: |
     #!/bin/bash -xeu
     echo 'This should execute before the setup'
+    stat /test
   post: |
     #!/bin/bash -xeu
     echo 'This should execute after the setup'
+    stat /test
 
 tests:
   script: |
