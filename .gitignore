@@ -1,1 +1,3 @@
 test/kubeconfig
+test/.running
+test.log

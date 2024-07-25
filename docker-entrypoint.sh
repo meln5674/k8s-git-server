@@ -50,6 +50,7 @@ ssh-keygen -A
 
 "$(which sshd)" -D -e &
 sshd_pid=$!
+trap "kill -sINT ${sshd_pid}" SIGINT
 
 mkdir -p /root/.ssh
 ssh-keygen -f /root/.ssh/id_rsa

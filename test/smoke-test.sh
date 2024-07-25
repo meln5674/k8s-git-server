@@ -33,15 +33,34 @@ FLAGS+=( --wait --debug --install )
 kubectl apply -f test/configmap.yaml
 
 kubectl delete job k8s-git-server-push || true
-( while ! kubectl logs -f job/k8s-git-server-push ; do sleep 2; done ) &
+
+DEFER='echo'
+
+touch ./test/.running
+DEFER="${DEFER}; rm ./test/.running; kubectl rollout restart deploy/k8s-git-server||true"
+trap "${DEFER}" EXIT
+
+
+while [ -f ./test/.running ] && ! kubectl logs -f job/k8s-git-server-push ; do sleep 2; done &
+job_logs_pid=$!
+DEFER="${DEFER}; kill $job_logs_pid||true"
+trap "${DEFER}" EXIT
+while [ -f ./test/.running ] && ! kubectl logs -f deploy/k8s-git-server ; do echo server logs exited; sleep 2; done &
+server_logs_pid=$!
+DEFER="${DEFER}; echo killing server logs; kill -sINT $server_logs_pid||true"
+trap "${DEFER}" EXIT
+kubectl get pods -w &
+watch_pods_pid=$!
+DEFER="${DEFER}; kill $watch_pods_pid||true"
+trap "${DEFER}" EXIT
 
 for x in 1 2; do
     helm upgrade "${FLAGS[@]}"
     
-    wait || true
-    
-    (while ! kubectl logs -f k8s-git-server-test-connection ; do sleep 2; done) &
+    while [ -f ./test/.running ] && ! kubectl logs -f k8s-git-server-test-connection ; do sleep 2; done &
+    test_logs_pid=$!
+    DEFER="${DEFER}; kill $test_logs_pid||true"
+    trap "${DEFER}" EXIT
     helm test k8s-git-server --debug
-    
-    wait || true
+    kill $test_logs_pid||true
 done
