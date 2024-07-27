@@ -42,7 +42,7 @@ post.sh: |
 {{- $configs := list "usersConfig" "flagsConfig" "scripts" }}
 {{- $toHash := "" }}
 {{- range $config := $configs }}
-{{- $toHash := print $toHash (include (print "k8s-git-server." $config) $dot) }}
+{{- $toHash = print $toHash (include (print "k8s-git-server." $config) $dot) }}
 {{- end }}
 {{- adler32sum $toHash }}
 {{- end }}
