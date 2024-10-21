@@ -116,6 +116,11 @@ ssh:
 extraSetup:
   pre: ''
   post: ''
+  # If pre and/or post are set, an extra startup probe will be added with these settings to detect when your setup is finished.
+  startupProbe:
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    failureThreshold: 60 # 60 * 5s = 300s = 5m by default
 
 tests:
   script: ''

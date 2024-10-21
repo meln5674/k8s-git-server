@@ -69,6 +69,12 @@ spec:
             - name: ssh
               containerPort: 22
               protocol: TCP
+          {{- if or .Values.extraSetup.pre .Values.extraSetup.post }}
+          startupProbe:
+            tcpSocket:
+              port: ssh
+            {{- .Values.extraSetup.startupProbe | toYaml | nindent 12 }}
+          {{- end }}
           livenessProbe:
             tcpSocket:
               port: ssh
